@@ -1,0 +1,15 @@
+# Dependencies
+node_modules
+# Prisma
+.env
+# NestJS
+dist
+coverage
+# IDE
+.idea
+.vscode
+# OS
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
