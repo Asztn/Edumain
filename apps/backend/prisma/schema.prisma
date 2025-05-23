@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  name        String?
+  password    String
+  role        Role      @default(BUYER)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  resources   Resource[] @relation("SellerResources")
+  purchases   Purchase[]
+  cart        Cart?
+  reviews     Review[]
+  wishlist    Wishlist?
+}
+
+model Resource {
+  id              String    @id @default(uuid())
+  title           String
+  description     String
+  price           Float
+  category        String
+  subject         String
+  gradeLevel      String
+  coverImageUrl   String?
+  previewImageUrls String[]
+  fileUrl         String
+  sellerId        String
+  seller          User      @relation("SellerResources", fields: [sellerId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  purchases       Purchase[]
+  cartItems       CartItem[]
+  reviews         Review[]
+  wishlistItems   WishlistItem[]
+}
+
+model Purchase {
+  id          String    @id @default(uuid())
+  userId      String
+  resourceId  String
+  purchaseDate DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  resource    Resource  @relation(fields: [resourceId], references: [id])
+
+  @@unique([userId, resourceId])
+}
+
+model Cart {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CartItem {
+  id          String    @id @default(uuid())
+  cartId      String
+  resourceId  String
+  quantity    Int       @default(1) // Though for digital goods, this is usually 1
+  cart        Cart      @relation(fields: [cartId], references: [id])
+  resource    Resource  @relation(fields: [resourceId], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@unique([cartId, resourceId])
+}
+
+model Review {
+  id          String    @id @default(uuid())
+  userId      String
+  resourceId  String
+  rating      Int       // e.g., 1-5
+  comment     String?
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  resource    Resource  @relation(fields: [resourceId], references: [id])
+
+  @@unique([userId, resourceId])
+}
+
+model Wishlist {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  items     WishlistItem[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model WishlistItem {
+  id          String    @id @default(uuid())
+  wishlistId  String
+  resourceId  String
+  wishlist    Wishlist  @relation(fields: [wishlistId], references: [id])
+  resource    Resource  @relation(fields: [resourceId], references: [id])
+  addedAt     DateTime  @default(now())
+
+  @@unique([wishlistId, resourceId])
+}
+
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
